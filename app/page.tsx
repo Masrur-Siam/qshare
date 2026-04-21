@@ -19,6 +19,19 @@ export default function QShare() {
   const [receivedFiles, setReceivedFiles] = useState<any[]>([]);
   const [isTransferring, setIsTransferring] = useState<boolean>(false);
 
+  // --- CORE FUNCTIONS ---
+  const downloadAll = () => {
+    if (receivedFiles.length === 0) return;
+    receivedFiles.forEach((f) => {
+      const link = document.createElement("a");
+      link.href = f.url;
+      link.download = f.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  };
+
   useEffect(() => {
     const initPeer = async () => {
       const { default: Peer } = await import("peerjs");
@@ -50,16 +63,6 @@ export default function QShare() {
     };
     initPeer();
   }, [files, shareText]);
-
-  // --- DOWNLOAD ALL FUNCTION (FIXED) ---
-  const downloadAll = () => {
-    receivedFiles.forEach((f) => {
-      const link = document.createElement("a");
-      link.href = f.url;
-      link.download = f.name;
-      link.click();
-    });
-  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -95,9 +98,9 @@ export default function QShare() {
       <div className="w-full max-w-xl mx-auto mb-4 animate-in slide-in-from-top-4">
         <div className="bg-white/5 border border-white/10 backdrop-blur-xl p-4 rounded-[24px] flex items-center gap-4 shadow-2xl">
           <div className={`p-2.5 rounded-xl bg-white/5 ${current.color} animate-pulse`}>{current.icon}</div>
-          <div className="flex-1 text-left">
+          <div className="flex-1 text-left text-white">
             <span className={`text-[8px] font-black uppercase tracking-[3px] ${current.color} italic block mb-0.5`}>{current.title}</span>
-            <p className="text-[13px] text-gray-200 font-bold italic leading-tight">"{current.msg}"</p>
+            <p className="text-[13px] font-bold italic leading-tight">"{current.msg}"</p>
           </div>
         </div>
       </div>
@@ -165,7 +168,7 @@ export default function QShare() {
               {(files.length > 0 || shareText) && (
                 <div className="w-full md:w-[55%] bg-white/5 border border-white/10 p-6 rounded-[35px] flex flex-col overflow-hidden animate-in slide-in-from-right-8 text-left">
                   <h3 className="text-[10px] font-black uppercase tracking-[3px] text-gray-500 mb-4 italic leading-none">In Queue</h3>
-                  <div className="flex-1 space-y-2 overflow-y-auto pr-2 max-h-[350px] custom-scrollbar">
+                  <div className="flex-1 space-y-2 overflow-y-auto pr-2 max-h-[350px] custom-scrollbar text-white">
                     {shareText && <div className="flex items-center justify-between p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20"><div className="flex items-center gap-3 overflow-hidden"><LinkIcon size={14} className="text-indigo-400"/><p className="text-xs font-bold truncate italic">Text Content</p></div><button onClick={() => setShareText("")} className="text-red-500/50 hover:text-red-500"><Trash2 size={14}/></button></div>}
                     {files.map((f, i) => (
                       <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10"><div className="flex items-center gap-3 overflow-hidden"><FileText size={14} className="text-gray-500"/><p className="text-xs font-bold truncate italic">{f.name}</p></div><button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500/50 hover:text-red-500"><Trash2 size={14}/></button></div>
@@ -197,7 +200,7 @@ export default function QShare() {
               {receivedFiles.length > 0 && (
                 <div className="w-full md:w-[55%] bg-white/5 border border-white/10 p-6 rounded-[35px] flex flex-col overflow-hidden animate-in slide-in-from-right-8">
                   <h3 className="text-[10px] font-black uppercase tracking-[3px] text-emerald-500 mb-4 italic leading-none">Inbox</h3>
-                  <div className="flex-1 space-y-2 overflow-y-auto pr-2 max-h-[450px] custom-scrollbar">
+                  <div className="flex-1 space-y-2 overflow-y-auto pr-2 max-h-[450px] custom-scrollbar text-white">
                     {receivedFiles.map((f, i) => (
                       <div key={i} className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
                          <div className="flex items-center gap-3 overflow-hidden text-left"><FileText size={16} className="text-emerald-400" /><p className="text-xs font-bold truncate italic text-white">{f.name}</p></div>
@@ -213,7 +216,7 @@ export default function QShare() {
       </main>
 
       <footer className="py-4 text-center opacity-40 mt-auto">
-        <p className="text-[8px] font-black uppercase tracking-[8px] italic leading-none">Developer: Masrur Siam The Mango Programmer</p>
+        <p className="text-[8px] font-black uppercase tracking-[8px] italic leading-none text-white">Developer: Masrur Siam The Mango Programmer</p>
       </footer>
     </div>
   );
