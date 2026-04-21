@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ⚡ QShare Pro - Lightning Fast P2P File Sharing
 
-## Getting Started
+**QShare Pro** holo ekti ultra-modern, secure, ebong lightning-fast peer-to-peer (P2P) file sharing application. Konorakom intermediate server charai sora-sori browser-to-browser file, text, ebong link share korar jonno eta banano hoyeche.
 
-First, run the development server:
+![QShare Banner](https://img.shields.io/badge/Speed-Lightning-yellow?style=for-the-badge&logo=zap)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
+![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-blue?style=for-the-badge&logo=tailwind-css)
+![PeerJS](https://img.shields.io/badge/P2P-PeerJS-red?style=for-the-badge&logo=peerjs)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✨ Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 🚀 **Zero Server Storage:** Apnar file kkhonoi server-e save hoy na, sora-sori device-to-device transfer hoy.
+- 📱 **Mobile Optimized:** Full responsive design, mobile-e smoothly scroll ar tap-e kaj kore.
+- 🔐 **Secure Handshake:** 6-digit unique code ba QR code-er maddhome secure connection.
+- 📁 **Multi-File Support:** Ekshathe onek gulo file share ebong "Download All" option.
+- 💬 **Direct Text/Link Share:** Text ba link copy-paste koreo share kora jay.
+- ⚡ **STUN Optimized:** Google-er STUN server use kora hoyeche fast connection establishment-er jonno.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Tech Stack
 
-## Learn More
+- **Framework:** Next.js 15 (App Router)
+- **Styling:** Tailwind CSS (Glassmorphism UI)
+- **Icons:** Lucide React
+- **P2P Engine:** PeerJS
+- **QR Code:** QRCode Canvas
 
-To learn more about Next.js, take a look at the following resources:
+## 🚀 How to Use
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Send:**
+   - App-e dhuke "Send" button-e click korun.
+   - File select korun ba text paste korun.
+   - 6-digit code-ti apnar friend-ke din ba QR code share korun.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Receive:**
+   - "Receive" button-e click korun.
+   - Friend-er deya 6-digit code-ti likhun.
+   - "Get Assets" click korlei connection established hobe ebong file download shuru hobe.
 
-## Deploy on Vercel
+## 👨‍💻 Developer
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Masrur Hossain Siam** *The Mango Programmer* Specialist in Full-Stack Web Development & Modern UI/UX.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+Built with ❤️ by **The Mango Programmer** 🥭
