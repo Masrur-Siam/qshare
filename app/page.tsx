@@ -24,7 +24,6 @@ export default function QShare() {
       const { default: Peer } = await import("peerjs");
       const customId = Math.floor(100000 + Math.random() * 900000).toString();
       
-      // Speed Optimization: STUN servers add kora hoyeche jate connection fast hoy
       const newPeer = new Peer(customId, {
         config: {
           iceServers: [
@@ -52,6 +51,16 @@ export default function QShare() {
     initPeer();
   }, [files, shareText]);
 
+  // --- DOWNLOAD ALL FUNCTION (FIXED) ---
+  const downloadAll = () => {
+    receivedFiles.forEach((f) => {
+      const link = document.createElement("a");
+      link.href = f.url;
+      link.download = f.name;
+      link.click();
+    });
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setShareText(""); 
@@ -72,7 +81,6 @@ export default function QShare() {
         setStatus("Success! ⚡");
       }
     });
-    conn.on("error", () => setStatus("Error! Retry."));
   };
 
   const TopTutorial = () => {
@@ -89,7 +97,7 @@ export default function QShare() {
           <div className={`p-2.5 rounded-xl bg-white/5 ${current.color} animate-pulse`}>{current.icon}</div>
           <div className="flex-1 text-left">
             <span className={`text-[8px] font-black uppercase tracking-[3px] ${current.color} italic block mb-0.5`}>{current.title}</span>
-            <p className="text-[13px] text-gray-200 font-bold italic leading-tight leading-none italic">"{current.msg}"</p>
+            <p className="text-[13px] text-gray-200 font-bold italic leading-tight">"{current.msg}"</p>
           </div>
         </div>
       </div>
@@ -98,12 +106,6 @@ export default function QShare() {
 
   return (
     <div className="h-screen bg-[#050507] text-[#e4e4e7] font-sans selection:bg-indigo-500/30 overflow-hidden flex flex-col p-4 md:p-0">
-      
-      {/* Visual Ambiance */}
-      <div className="fixed inset-0 pointer-events-none opacity-20 z-0">
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-indigo-500/10 via-transparent to-emerald-500/10"></div>
-      </div>
-
       <nav className="relative z-10 max-w-[1200px] mx-auto px-6 py-4 flex justify-between items-center w-full">
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView("home")}>
           <div className="bg-indigo-600 p-1.5 rounded-lg"><Zap fill="white" size={16} /></div>
@@ -121,12 +123,12 @@ export default function QShare() {
           {view === "home" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in zoom-in duration-500">
               <button onClick={() => setView("send")} className="group bg-white/5 border border-white/10 p-8 rounded-[35px] hover:bg-indigo-500/5 transition-all text-left shadow-xl active:scale-95">
-                 <Share2 className="text-indigo-500 mb-4 group-hover:scale-110 transition-transform" size={40} />
+                 <Share2 className="text-indigo-500 mb-4" size={40} />
                  <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">Send</h2>
                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Files, Text or Links</p>
               </button>
               <button onClick={() => setView("receive")} className="group bg-white/5 border border-white/10 p-8 rounded-[35px] hover:bg-emerald-500/5 transition-all text-left shadow-xl active:scale-95">
-                 <Download className="text-emerald-500 mb-4 group-hover:scale-110 transition-transform" size={40} />
+                 <Download className="text-emerald-500 mb-4" size={40} />
                  <h2 className="text-2xl font-black uppercase italic tracking-tighter text-white">Receive</h2>
                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Get assets instantly</p>
               </button>
@@ -137,22 +139,20 @@ export default function QShare() {
             <div className="h-full flex flex-col md:flex-row gap-4 animate-in zoom-in overflow-hidden">
               <div className={`bg-white/5 border border-white/10 p-6 rounded-[35px] flex flex-col shadow-2xl transition-all ${files.length > 0 || shareText ? 'w-full md:w-[45%]' : 'w-full max-w-lg mx-auto h-[450px] justify-center'}`}>
                  <button onClick={() => {setView("home"); setFiles([]); setShareText("");}} className="flex items-center gap-2 text-[10px] font-black text-gray-500 mb-6 hover:text-white uppercase italic leading-none"><ArrowLeft size={14} /> Back</button>
-                 
-                 <div className="space-y-4">
+                 <div className="space-y-4 text-center">
                     {!shareText && (
-                        <div className="relative border-2 border-dashed border-white/10 rounded-[25px] p-8 text-center bg-black/20 group transition-all">
+                        <div className="relative border-2 border-dashed border-white/10 rounded-[25px] p-8 bg-black/20 group transition-all">
                             <input type="file" multiple onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer" />
-                            <Upload className="mx-auto mb-2 text-gray-600 group-hover:text-indigo-400 transition-colors" size={28} />
+                            <Upload className="mx-auto mb-2 text-gray-600 group-hover:text-indigo-400" size={28} />
                             <p className="text-[10px] font-black text-gray-500 uppercase italic tracking-widest">Select Files</p>
                         </div>
                     )}
                     {files.length === 0 && (
-                        <div className="relative bg-black/40 border border-white/10 rounded-[25px] p-4">
+                        <div className="relative bg-black/40 border border-white/10 rounded-[25px] p-4 text-left">
                             <textarea className="w-full bg-transparent outline-none text-xs text-indigo-100 placeholder:text-gray-800 resize-none h-20 italic font-medium" placeholder="Paste link or text here..." value={shareText} onChange={(e) => {setFiles([]); setShareText(e.target.value)}} />
                         </div>
                     )}
                  </div>
-
                  {(files.length > 0 || shareText) && (
                    <div className="mt-6 bg-indigo-500/10 p-4 rounded-[25px] border border-indigo-500/20 text-center animate-in zoom-in">
                       <p className="text-[9px] text-indigo-400 font-black uppercase mb-2 tracking-[4px] italic">Handshake Code</p>
@@ -163,12 +163,12 @@ export default function QShare() {
               </div>
 
               {(files.length > 0 || shareText) && (
-                <div className="w-full md:w-[55%] bg-white/5 border border-white/10 p-6 rounded-[35px] flex flex-col overflow-hidden animate-in slide-in-from-right-8">
+                <div className="w-full md:w-[55%] bg-white/5 border border-white/10 p-6 rounded-[35px] flex flex-col overflow-hidden animate-in slide-in-from-right-8 text-left">
                   <h3 className="text-[10px] font-black uppercase tracking-[3px] text-gray-500 mb-4 italic leading-none">In Queue</h3>
                   <div className="flex-1 space-y-2 overflow-y-auto pr-2 max-h-[350px] custom-scrollbar">
-                    {shareText && <div className="flex items-center justify-between p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-left"><div className="flex items-center gap-3 overflow-hidden"><LinkIcon size={14} className="text-indigo-400"/><p className="text-xs font-bold truncate italic">Text Content</p></div><button onClick={() => setShareText("")} className="text-red-500/50 hover:text-red-500"><Trash2 size={14}/></button></div>}
+                    {shareText && <div className="flex items-center justify-between p-3 bg-indigo-500/10 rounded-xl border border-indigo-500/20"><div className="flex items-center gap-3 overflow-hidden"><LinkIcon size={14} className="text-indigo-400"/><p className="text-xs font-bold truncate italic">Text Content</p></div><button onClick={() => setShareText("")} className="text-red-500/50 hover:text-red-500"><Trash2 size={14}/></button></div>}
                     {files.map((f, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10 text-left"><div className="flex items-center gap-3 overflow-hidden"><FileText size={14} className="text-gray-500"/><p className="text-xs font-bold truncate italic">{f.name}</p></div><button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500/50 hover:text-red-500"><Trash2 size={14}/></button></div>
+                      <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/10"><div className="flex items-center gap-3 overflow-hidden"><FileText size={14} className="text-gray-500"/><p className="text-xs font-bold truncate italic">{f.name}</p></div><button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="text-red-500/50 hover:text-red-500"><Trash2 size={14}/></button></div>
                     ))}
                   </div>
                 </div>
@@ -177,14 +177,14 @@ export default function QShare() {
           )}
 
           {view === "receive" && (
-            <div className="h-full flex flex-col md:flex-row gap-4 animate-in zoom-in overflow-hidden">
+            <div className="h-full flex flex-col md:flex-row gap-4 animate-in zoom-in overflow-hidden text-left">
               <div className={`bg-white/5 border border-white/10 p-8 rounded-[35px] flex flex-col shadow-2xl ${receivedFiles.length > 0 ? 'w-full md:w-[45%]' : 'w-full max-w-lg mx-auto h-full justify-center'}`}>
                  <button onClick={() => {setView("home"); setReceivedFiles([]);}} className="flex items-center gap-2 text-[10px] font-black text-gray-600 mb-8 hover:text-white uppercase italic leading-none"><ArrowLeft size={14} /> Back</button>
                  {!receivedFiles.length ? (
                    <div className="space-y-8 text-center py-4">
                       <MonitorPlay className="mx-auto text-gray-800 animate-pulse" size={40} />
                       <input type="text" maxLength={6} placeholder="000000" className="w-full bg-black/40 border border-white/10 p-6 rounded-[25px] outline-none focus:ring-1 ring-emerald-500 font-mono text-center text-6xl text-emerald-400 tracking-[8px]" onChange={(e) => setTargetId(e.target.value)} />
-                      <button onClick={handleReceiveConnect} className="w-full bg-emerald-600 hover:bg-emerald-500 py-5 rounded-[25px] font-black tracking-widest uppercase text-xs active:scale-95 transition-all shadow-xl shadow-emerald-900/10"> Get Assets </button>
+                      <button onClick={handleReceiveConnect} className="w-full bg-emerald-600 hover:bg-emerald-500 py-5 rounded-[25px] font-black tracking-widest uppercase text-xs active:scale-95 transition-all"> Get Assets </button>
                    </div>
                  ) : (
                    <div className="bg-emerald-500/10 p-10 rounded-[35px] border border-emerald-500/20 text-center animate-in zoom-in h-full flex flex-col justify-center items-center">
@@ -199,8 +199,8 @@ export default function QShare() {
                   <h3 className="text-[10px] font-black uppercase tracking-[3px] text-emerald-500 mb-4 italic leading-none">Inbox</h3>
                   <div className="flex-1 space-y-2 overflow-y-auto pr-2 max-h-[450px] custom-scrollbar">
                     {receivedFiles.map((f, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10 text-left">
-                         <div className="flex items-center gap-3 overflow-hidden"><FileText size={16} className="text-emerald-400" /><p className="text-xs font-bold truncate italic text-white">{f.name}</p></div>
+                      <div key={i} className="flex items-center justify-between p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/10">
+                         <div className="flex items-center gap-3 overflow-hidden text-left"><FileText size={16} className="text-emerald-400" /><p className="text-xs font-bold truncate italic text-white">{f.name}</p></div>
                          <a href={f.url} download={f.name} className="p-2 bg-white text-black rounded-lg hover:scale-110 transition-transform"><Download size={14} /></a>
                       </div>
                     ))}
