@@ -27,7 +27,6 @@ export default function QShare() {
   const handleReset = () => { window.location.href = window.location.origin; };
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [view]);
 
-  // --- AUTO UPLOAD ON FILE SELECT ---
   const autoUpload = async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
     setIsSyncing(true);
@@ -60,7 +59,6 @@ export default function QShare() {
     } catch (err) { setStatus("Mesh Expired"); }
   };
 
-  // --- RECEIVE LOGIC ---
   const handleReceive = async () => {
     const id = targetId.join("");
     if (id.length < 6) return;
@@ -74,19 +72,16 @@ export default function QShare() {
     } catch (err) { setStatus("Connection Fail"); }
   };
 
-  // --- OTP & KEYBOARD HANDLERS ---
   const handleOtpChange = (value: string, index: number) => {
     if (isNaN(Number(value))) return;
     const newTargetId = [...targetId];
     newTargetId[index] = value.substring(value.length - 1);
     setTargetId(newTargetId);
     
-    // Auto-focus next box
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     } 
     
-    // AUTO-EXECUTE on 6th digit
     if (value && index === 5) {
       setTimeout(() => handleReceive(), 100);
     }
@@ -96,7 +91,6 @@ export default function QShare() {
     if (e.key === "Backspace" && !targetId[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-    // Enter key support
     if (e.key === "Enter" && targetId.join("").length === 6) {
       handleReceive();
     }
@@ -184,7 +178,17 @@ export default function QShare() {
                   <div className="space-y-10 text-center">
                     <div className="flex justify-center gap-2">
                       {targetId.map((data, index) => (
-                        <input key={index} type="text" ref={(el) => (inputRefs.current[index] = el)} value={data} maxLength={1} onChange={(e) => handleOtpChange(e.target.value, index)} onKeyDown={(e) => handleKeyDown(e, index)} className="w-10 h-14 md:w-14 md:h-20 bg-black/40 border border-white/10 rounded-xl text-3xl md:text-5xl font-black text-center text-indigo-500 outline-none focus:ring-2 ring-indigo-500/30 transition-all placeholder:opacity-5" placeholder="0" />
+                        <input 
+                          key={index} 
+                          type="text" 
+                          ref={(el) => { inputRefs.current[index] = el; }} 
+                          value={data} 
+                          maxLength={1} 
+                          onChange={(e) => handleOtpChange(e.target.value, index)} 
+                          onKeyDown={(e) => handleKeyDown(e, index)} 
+                          className="w-10 h-14 md:w-14 md:h-20 bg-black/40 border border-white/10 rounded-xl text-3xl md:text-5xl font-black text-center text-indigo-500 outline-none focus:ring-2 ring-indigo-500/30 transition-all placeholder:opacity-5" 
+                          placeholder="0" 
+                        />
                       ))}
                     </div>
                     <button onClick={handleReceive} className="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-[32px] font-black uppercase text-xs tracking-[2px] text-white shadow-2xl active:scale-95 transition-all"> Establish Mesh </button>
