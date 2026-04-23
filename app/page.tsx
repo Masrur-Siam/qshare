@@ -2,13 +2,13 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { 
-  Zap, Share2, Download, Upload, FileText, DownloadCloud, 
-  ArrowLeft, Trash2, ShieldCheck, CheckCircle2, Sparkles, 
-  Globe, Activity, Link as LinkIcon, AlertCircle
+  Zap, Download, Upload, FileText, 
+  ArrowLeft, Sparkles, Activity, Shield, 
+  Layers, Cpu, Globe, Lock
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 
-// --- SUPABASE CONFIG (FIXED KEY) ---
+// --- SUPABASE CONFIG ---
 const supabase = createClient(
   "https://vecwracghzskshbfspaq.supabase.co", 
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlY3dyYWNnaHpza3NoYmZzcGFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NzE1MjEsImV4cCI6MjA5MjQ0NzUyMX0.BJ7aRh-p8oR4Y2fhOrVCTGviFcfUs0J9d3bq6Dae_3A" 
@@ -21,55 +21,43 @@ export default function QShare() {
   const [files, setFiles] = useState<File[]>([]);
   const [status, setStatus] = useState("System Ready");
   const [receivedFiles, setReceivedFiles] = useState<any[]>([]);
-  const [uploading, setUploading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  const handleUpload = async () => {
-    if (files.length === 0) {
-      setStatus("No files selected!");
-      return;
-    }
-    setUploading(true);
-    setStatus("Broadcasting...");
+  // --- REFRESH EVERYTHING ---
+  const handleReset = () => {
+    window.location.href = window.location.origin; // Pura page fresh kore home-e niye jabe
+  };
+
+  // --- AUTO UPLOAD ON SELECT ---
+  const autoUpload = async (selectedFiles: File[]) => {
+    if (selectedFiles.length === 0) return;
     
+    setIsSyncing(true);
+    setStatus("Uploading...");
     const shareId = Math.floor(100000 + Math.random() * 900000).toString();
 
     try {
-      for (const file of files) {
+      for (const file of selectedFiles) {
         const filePath = `${shareId}/${file.name}`;
-        
-        const { error: uploadError } = await supabase.storage
+        const { error } = await supabase.storage
           .from("qshare-files")
-          .upload(filePath, file, {
-            cacheControl: '3600',
-            upsert: true,
-            contentType: file.type
-          });
+          .upload(filePath, file, { upsert: true });
 
-        if (uploadError) {
-          console.error("Upload Error:", uploadError.message);
-          setStatus(`FAIL: ${uploadError.message}`);
-          setUploading(false);
-          return;
-        }
+        if (error) throw error;
       }
-
       setMyId(shareId);
-      setStatus("Live ✅");
+      setStatus("Ready to Share ✅");
     } catch (err: any) {
-      console.error("System Error:", err);
-      setStatus("Network Failure ❌");
+      setStatus("Upload Failed ❌");
     } finally {
-      setUploading(false);
+      setIsSyncing(false);
     }
   };
 
   const handleReceive = async (manualId?: string) => {
     const id = manualId || targetId;
-    if (!id || id.length < 6) {
-      setStatus("Enter 6-digit code");
-      return;
-    }
-    setStatus("Intercepting Assets...");
+    if (!id || id.length < 6) return;
+    setStatus("Searching for files...");
     try {
       const { data, error } = await supabase.storage.from("qshare-files").list(id);
       if (data && data.length > 0) {
@@ -78,13 +66,15 @@ export default function QShare() {
           return { name: f.name, url: urlData.publicUrl };
         });
         setReceivedFiles(fetchedFiles);
-        setStatus("Assets Found! ⚡");
+        setStatus("Files Found! ✅");
+
+        // Temporary Storage: Delete from DB after listing
+        const filePaths = data.map(f => `${id}/${f.name}`);
+        await supabase.storage.from("qshare-files").remove(filePaths);
       } else {
-        setStatus("Link Invalid ⚠️");
+        setStatus("Wrong Code or Files Expired");
       }
-    } catch (err) { 
-      setStatus("Connection Error"); 
-    }
+    } catch (err) { setStatus("Connection Error"); }
   };
 
   useEffect(() => {
@@ -94,91 +84,127 @@ export default function QShare() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#020204] text-[#f4f4f5] font-sans flex flex-col overflow-x-hidden selection:bg-indigo-500/30">
-      <div className="fixed inset-0 pointer-events-none opacity-20">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600 blur-[120px]"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-600 blur-[120px]"></div>
+    <div className="min-h-screen bg-[#070708] text-[#f0f0f0] font-sans selection:bg-indigo-500/30 overflow-x-hidden">
+      {/* SaaS Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 blur-[120px] rounded-full"></div>
       </div>
 
-      <nav className="relative z-10 max-w-[1100px] mx-auto px-6 py-8 flex justify-between items-center w-full">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.location.href="/"}>
-          <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-600/20"><Zap size={22} fill="white" /></div>
-          <h1 className="text-xl font-black italic tracking-tighter uppercase leading-none text-white">QSHARE <span className="text-indigo-500">PRO</span></h1>
+      {/* Navbar */}
+      <nav className="relative z-50 max-w-6xl mx-auto px-6 py-8 flex justify-between items-center">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={handleReset}>
+          <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-600/20 group-hover:scale-110 transition-all">
+            <Zap size={20} className="text-white fill-white" />
+          </div>
+          <span className="text-xl font-black tracking-tighter uppercase italic text-white">QShare</span>
         </div>
-        <div className={`flex items-center gap-2 px-5 py-2 rounded-full border ${status.startsWith("FAIL") ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-white/5 border-white/10 text-emerald-400'}`}>
+        
+        <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl">
+          <div className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
           <span className="text-[10px] font-black uppercase tracking-widest">{status}</span>
         </div>
       </nav>
 
-      <main className="relative z-10 flex-1 max-w-[1100px] mx-auto w-full flex flex-col justify-center px-4 pb-20">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-10">
         {view === "home" && (
-          <div className="space-y-12 animate-in fade-in duration-700 text-center">
-            <h2 className="text-6xl md:text-8xl font-black italic tracking-tighter uppercase leading-none">Hybrid <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-emerald-400">Mesh.</span></h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-              <button onClick={() => setView("send")} className="bg-white/5 border border-white/10 p-12 rounded-[56px] text-left hover:bg-white/[0.08] transition-all group shadow-2xl relative overflow-hidden">
-                <Share2 className="text-indigo-500 mb-6 group-hover:rotate-12 transition-transform" size={56} />
-                <h3 className="text-4xl font-black italic text-white uppercase leading-none">Transmit</h3>
+          <div className="flex flex-col items-center justify-center min-h-[65vh] text-center animate-in fade-in duration-700">
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[2px] mb-8">
+              <Globe size={12} /> Instant File Sharing
+            </div>
+            <h1 className="text-6xl md:text-9xl font-black italic tracking-tighter uppercase leading-[0.8] mb-8">
+              Transfer <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400">Everything.</span>
+            </h1>
+            <p className="max-w-2xl text-gray-500 text-sm md:text-lg mb-14 font-medium leading-relaxed">
+              Send photos, videos, and documents to any device in seconds. <br className="hidden md:block" /> 
+              No login required. Just upload and share the code.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-3xl">
+              <button onClick={() => setView("send")} className="group p-10 rounded-[48px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] hover:border-indigo-500/40 transition-all text-left shadow-2xl">
+                <div className="bg-indigo-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-500 transition-colors duration-500"><Upload className="text-indigo-400 group-hover:text-white" size={28} /></div>
+                <h3 className="text-3xl font-black italic uppercase text-white mb-2 leading-none">Transfer</h3>
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-none">Upload and get a code</p>
               </button>
-              <button onClick={() => setView("receive")} className="bg-white/5 border border-white/10 p-12 rounded-[56px] text-left hover:bg-white/[0.08] transition-all group shadow-2xl relative overflow-hidden">
-                <DownloadCloud className="text-emerald-500 mb-6 group-hover:bounce transition-transform" size={56} />
-                <h3 className="text-4xl font-black italic text-white uppercase leading-none">Intercept</h3>
+              <button onClick={() => setView("receive")} className="group p-10 rounded-[48px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] hover:border-emerald-500/40 transition-all text-left shadow-2xl">
+                <div className="bg-emerald-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 transition-colors duration-500"><Download className="text-emerald-400 group-hover:text-white" size={28} /></div>
+                <h3 className="text-3xl font-black italic uppercase text-white mb-2 leading-none">Receive</h3>
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-none">Enter code to download</p>
               </button>
             </div>
           </div>
         )}
 
         {(view === "send" || view === "receive") && (
-          <div className="animate-in zoom-in-95 duration-500 w-full max-w-5xl mx-auto">
-            <button onClick={() => setView("home")} className="flex items-center gap-2 text-[10px] font-black text-gray-500 mb-10 hover:text-white transition-colors uppercase italic tracking-widest"><ArrowLeft size={16} /> Deck</button>
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              <div className="md:col-span-5 bg-white/5 border border-white/10 p-10 rounded-[56px] backdrop-blur-3xl shadow-2xl">
+          <div className="max-w-4xl mx-auto animate-in zoom-in-95 duration-500">
+            <button onClick={handleReset} className="flex items-center gap-2 text-[11px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[4px] mb-12 italic"><ArrowLeft size={16} /> Back to Home</button>
+            
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
+              <div className="md:col-span-6 bg-white/[0.03] border border-white/10 rounded-[56px] p-12 backdrop-blur-3xl shadow-2xl relative overflow-hidden">
                 {view === "send" ? (
-                  <div className="space-y-8">
-                    <div className="relative border-2 border-dashed border-white/10 rounded-[40px] p-12 bg-black/40 hover:border-indigo-500/50 transition-all cursor-pointer group text-center">
-                      <input type="file" multiple onChange={(e) => setFiles(Array.from(e.target.files || []))} className="absolute inset-0 opacity-0 cursor-pointer" />
-                      <Upload className="text-indigo-500 mx-auto mb-4 group-hover:-translate-y-2 transition-transform" size={48} />
-                      <p className="text-[10px] font-black uppercase text-gray-500 italic text-glow">Load Assets</p>
-                    </div>
-                    <button onClick={handleUpload} disabled={uploading || files.length === 0} className="w-full bg-indigo-600 hover:bg-indigo-500 py-6 rounded-3xl font-black uppercase text-xs tracking-[2px] disabled:opacity-30 transition-all shadow-xl shadow-indigo-600/20 active:scale-95">
-                      {uploading ? "Broadcasting..." : "Initialize Mesh"}
-                    </button>
-                    {myId && (
-                      <div className="pt-8 text-center animate-in zoom-in">
-                        <div className="bg-white p-5 inline-block rounded-[40px] shadow-2xl border-[8px] border-white/10 mb-8">
-                          <QRCodeCanvas value={`https://qshare69.vercel.app?id=${myId}`} size={180} level="H" />
+                  <div className="space-y-8 text-center">
+                    {!myId ? (
+                      <div className="relative border-2 border-dashed border-white/10 rounded-[40px] p-16 hover:border-indigo-500/50 transition-all cursor-pointer group bg-black/20">
+                        <input type="file" multiple onChange={(e) => {
+                          const selFiles = Array.from(e.target.files || []);
+                          setFiles(selFiles);
+                          autoUpload(selFiles);
+                        }} className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <div className="bg-indigo-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                           <Upload className="text-indigo-500" size={32} />
                         </div>
-                        <div className="text-6xl font-mono font-black tracking-[12px] text-white uppercase leading-none">{myId}</div>
+                        <p className="text-[10px] font-black uppercase tracking-[3px] text-gray-400">Select Files</p>
+                      </div>
+                    ) : (
+                      <div className="animate-in zoom-in-90 duration-500">
+                        <div className="bg-white p-6 inline-block rounded-[40px] shadow-2xl mb-8 border-[10px] border-white/5">
+                          <QRCodeCanvas value={`https://qshare69.vercel.app?id=${myId}`} size={200} level="H" />
+                        </div>
+                        <div className="text-7xl font-black tracking-[10px] text-white italic uppercase leading-none mb-4">{myId}</div>
+                        <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[6px]">Share this code</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-12 text-center py-6">
-                    <input type="text" value={targetId} maxLength={6} placeholder="000000" className="w-full bg-black/40 border border-white/10 p-10 rounded-[40px] text-7xl text-indigo-500 font-mono text-center tracking-[12px] outline-none placeholder:opacity-5" onChange={(e) => setTargetId(e.target.value)} />
-                    <button onClick={() => handleReceive()} className="w-full bg-indigo-600 hover:bg-indigo-500 py-7 rounded-[40px] font-black uppercase text-xs text-white shadow-2xl active:scale-95 transition-all"> Establish Sync </button>
+                  <div className="space-y-12 py-4 text-center">
+                    <input type="text" value={targetId} maxLength={6} placeholder="000000" className="w-full bg-black border border-white/10 p-10 rounded-[40px] text-7xl text-indigo-500 font-black text-center tracking-[10px] outline-none placeholder:opacity-5 shadow-2xl" onChange={(e) => setTargetId(e.target.value)} />
+                    <button onClick={() => handleReceive()} className="w-full bg-indigo-600 hover:bg-indigo-500 py-7 rounded-[40px] font-black uppercase text-xs tracking-[2px] text-white shadow-xl active:scale-95 transition-all"> Download Files </button>
                   </div>
                 )}
               </div>
 
-              <div className="md:col-span-7 bg-white/5 border border-white/10 p-8 rounded-[56px] backdrop-blur-2xl flex flex-col min-h-[400px] shadow-2xl overflow-hidden">
-                <h3 className="text-[10px] font-black uppercase tracking-[6px] text-gray-500 mb-8 px-4 italic text-glow">Stream Chamber</h3>
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4">
-                  {(view === "send" ? files : receivedFiles).length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center opacity-10 grayscale"><Activity size={80} /></div>
-                  ) : (
-                    (view === "send" ? files : receivedFiles).map((f: any, i: number) => (
-                      <div key={i} className="flex justify-between items-center p-6 bg-white/5 rounded-[32px] border border-white/5 hover:bg-white/[0.08] transition-all group">
-                        <div className="flex items-center gap-4 overflow-hidden text-left">
-                          <FileText size={24} className={view === "send" ? "text-indigo-400" : "text-emerald-400"} />
-                          <div className="overflow-hidden"><p className="text-sm font-black text-white/90 truncate italic">{f.name}</p></div>
+              <div className="md:col-span-6 space-y-6">
+                <div className="bg-white/[0.03] border border-white/10 rounded-[56px] p-8 backdrop-blur-2xl flex flex-col min-h-[350px] shadow-2xl">
+                  <h4 className="text-[10px] font-black uppercase tracking-[6px] text-gray-600 mb-8 px-4 italic leading-none">Files in Transit</h4>
+                  <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                    {(view === "send" ? files : receivedFiles).length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center opacity-10"><Activity size={60} /></div>
+                    ) : (
+                      (view === "send" ? files : receivedFiles).map((f: any, i: number) => (
+                        <div key={i} className="flex justify-between items-center p-6 bg-white/5 border border-white/5 rounded-[32px] group">
+                          <div className="flex items-center gap-4 overflow-hidden text-left">
+                             <div className="p-3 bg-indigo-500/10 rounded-2xl"><FileText size={20} className="text-indigo-400" /></div>
+                             <div className="overflow-hidden">
+                                <p className="text-sm font-black text-gray-200 truncate italic">{f.name}</p>
+                                <p className="text-[8px] font-bold text-gray-600 uppercase tracking-widest mt-1">Ready</p>
+                             </div>
+                          </div>
+                          {view === "receive" && (
+                            <a href={f.url} target="_blank" className="p-4 bg-white text-black rounded-2xl hover:scale-110 transition-transform shadow-xl"><Download size={20} /></a>
+                          )}
                         </div>
-                        {view === "send" ? (
-                          <button onClick={() => setFiles(prev => prev.filter((_, idx) => idx !== i))} className="p-3 text-gray-700 hover:text-red-500 transition-colors"><Trash2 size={22} /></button>
-                        ) : (
-                          <a href={f.url} target="_blank" rel="noopener noreferrer" className="p-4 bg-white text-black rounded-2xl shadow-xl hover:scale-110 transition-transform"><Download size={20} /></a>
-                        )}
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                {/* Security Feature Badge */}
+                <div className="bg-indigo-500/5 border border-indigo-500/10 rounded-[36px] p-6 flex items-center gap-5">
+                   <div className="p-4 rounded-2xl bg-indigo-500/10 text-indigo-400 shadow-inner"><Lock size={22} /></div>
+                   <div className="text-left">
+                      <p className="text-[10px] font-black uppercase tracking-[3px] text-indigo-400 leading-none mb-2">Private & Secure</p>
+                      <p className="text-[9px] text-gray-600 font-bold leading-tight uppercase italic">Files are automatically deleted <br /> once they are received.</p>
+                   </div>
                 </div>
               </div>
             </div>
@@ -186,8 +212,9 @@ export default function QShare() {
         )}
       </main>
 
-      <footer className="py-12 text-center opacity-20 text-[10px] font-black tracking-[12px] uppercase italic text-white leading-none">
-        Developed by Masrur Siam — The Mango Programmer
+      <footer className="py-20 text-center opacity-40">
+        <p className="text-[10px] font-black uppercase tracking-[12px] italic text-white mb-4">Masrur Siam</p>
+        <div className="h-px w-24 bg-gradient-to-r from-transparent via-indigo-500 to-transparent mx-auto"></div>
       </footer>
     </div>
   );
