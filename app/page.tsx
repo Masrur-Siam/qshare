@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { 
   Zap, Download, Upload, FileText, ArrowLeft, 
   Sparkles, Shield, Layers, Cpu, Globe, Lock, 
-  CheckCircle, Loader2
+  CheckCircle, Loader2, Activity // <--- Ekhane Activity add kora hoyeche
 } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
 
@@ -58,12 +58,11 @@ export default function QShare() {
 
       if (error) throw error;
 
-      // Create a local blob link and trigger download
       const blob = new Blob([data]);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = fileName; // Force download with original name
+      link.download = fileName; 
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -91,7 +90,6 @@ export default function QShare() {
 
   return (
     <div className="min-h-screen bg-[#020203] text-[#f4f4f5] font-sans selection:bg-indigo-500/30">
-      {/* Background Ambience */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-600/10 blur-[140px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-600/10 blur-[140px] rounded-full" />
