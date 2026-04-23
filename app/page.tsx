@@ -28,28 +28,27 @@ export default function QShare() {
   const handleReset = () => { window.location.href = window.location.origin; };
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [view]);
 
-  // --- CONTROLLED PROGRESS LOGIC ---
+  // --- TURBO AUTO UPLOAD (PARALLEL) ---
   const autoUpload = async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
     setIsSyncing(true);
     setStatus("Syncing...");
-    setProgress(5);
+    setProgress(15); // Instant kickstart
 
-    // Fake progress to 95%
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) { clearInterval(timer); return 95; }
-        return prev + 2;
+        return prev + 10; // Rapid movement
       });
-    }, 50);
+    }, 40);
 
     const shareId = Math.floor(100000 + Math.random() * 900000).toString();
     try {
-      for (const file of selectedFiles) {
-        await supabase.storage.from("qshare-files").upload(`${shareId}/${file.name}`, file, { upsert: true });
-      }
+      // Parallel upload to save time
+      await Promise.all(selectedFiles.map(file => 
+        supabase.storage.from("qshare-files").upload(`${shareId}/${file.name}`, file, { upsert: true })
+      ));
       
-      // FINISH: When QR is ready
       setMyId(shareId);
       clearInterval(timer);
       setProgress(100);
@@ -59,7 +58,7 @@ export default function QShare() {
       setStatus("Upload Fail"); 
       setProgress(0);
     } finally { 
-      setTimeout(() => setIsSyncing(false), 800);
+      setTimeout(() => setIsSyncing(false), 400);
     }
   };
 
@@ -89,7 +88,7 @@ export default function QShare() {
     const id = targetId.join("");
     setStatus("Extracting...");
     for (const file of receivedFiles) { await forceDownload(file.name, id); }
-    setStatus("All Assets Saved ✅");
+    setStatus("All Saved ✅");
   };
 
   const handleReceive = async () => {
@@ -97,14 +96,14 @@ export default function QShare() {
     if (id.length < 6) return;
     setIsSyncing(true);
     setStatus("Intercepting...");
-    setProgress(10);
+    setProgress(20);
 
     const timer = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 95) { clearInterval(timer); return 95; }
-        return prev + 5;
+        return prev + 12;
       });
-    }, 40);
+    }, 30);
 
     try {
       const { data } = await supabase.storage.from("qshare-files").list(id);
@@ -119,7 +118,7 @@ export default function QShare() {
         setStatus("Empty Mesh"); 
       }
     } catch (err) { setStatus("Fail"); }
-    finally { setTimeout(() => setIsSyncing(false), 800); }
+    finally { setTimeout(() => setIsSyncing(false), 400); }
   };
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -157,20 +156,20 @@ export default function QShare() {
             <div className="px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black uppercase tracking-[2px] mb-10 leading-none flex items-center gap-2">
               <Globe size={12} /> Instant File Sharing
             </div>
-            <h1 className="text-6xl md:text-[110px] font-black italic tracking-tighter uppercase leading-[0.8] mb-10">
-              Move Assets. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400 font-black italic">Instantly.</span>
+            <h1 className="text-5xl md:text-[110px] font-black italic tracking-tighter uppercase leading-[0.8] mb-10">
+              Move Assets. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400 font-black italic leading-[0.8]">Instantly.</span>
             </h1>
             <p className="max-w-xl text-gray-500 text-sm md:text-xl mb-14 font-medium px-6 leading-relaxed">
-              Experience zero-latency file transfer between nodes. <br className="hidden md:block" /> 
-              Encrypted, temporary, and blazingly fast.
+              High-performance node-to-node file exchange. <br className="hidden md:block" /> 
+              No logins, no latency—just pure speed.
             </p>
             <div className="flex flex-col md:flex-row gap-6 w-full max-w-3xl justify-center items-center px-4">
-              <button onClick={() => setView("send")} className="group w-full p-12 rounded-[56px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] hover:border-indigo-500/40 transition-all text-left shadow-2xl relative">
+              <button onClick={() => setView("send")} className="group w-full p-12 rounded-[56px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] hover:border-indigo-500/40 transition-all text-left shadow-2xl relative overflow-hidden">
                 <div className="bg-indigo-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-500 transition-all duration-500 shadow-lg shadow-indigo-500/10"><Upload className="text-indigo-400 group-hover:text-white" size={28} /></div>
                 <h3 className="text-4xl font-black italic uppercase text-white mb-2 leading-none">Transfer</h3>
-                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest leading-none">Deploy Assets to Node</p>
+                <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest leading-none">Drop Assets to Node</p>
               </button>
-              <button onClick={() => setView("receive")} className="group w-full p-12 rounded-[56px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] hover:border-emerald-500/40 transition-all text-left shadow-2xl relative">
+              <button onClick={() => setView("receive")} className="group w-full p-12 rounded-[56px] bg-white/[0.02] border border-white/10 hover:bg-white/[0.05] hover:border-emerald-500/40 transition-all text-left shadow-2xl relative overflow-hidden">
                 <div className="bg-emerald-500/10 w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-emerald-500 transition-all duration-500 shadow-lg shadow-emerald-500/10"><Download className="text-emerald-400 group-hover:text-white" size={28} /></div>
                 <h3 className="text-4xl font-black italic uppercase text-white mb-2 leading-none">Receive</h3>
                 <p className="text-gray-500 text-[11px] font-bold uppercase tracking-widest leading-none">Sync from Access Token</p>
@@ -181,29 +180,26 @@ export default function QShare() {
 
         {(view === "send" || view === "receive") && (
           <div className="w-full max-w-5xl animate-in zoom-in-95 duration-500 px-4">
-            <button onClick={handleReset} className="flex items-center gap-2 text-[11px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[4px] mb-12 italic leading-none"><ArrowLeft size={16} /> Close Terminal</button>
+            <button onClick={handleReset} className="flex items-center gap-2 text-[11px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[4px] mb-12 italic leading-none"><ArrowLeft size={16} /> Close Mesh</button>
             
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-6 bg-[#0a0a0b] border border-white/10 rounded-[64px] p-10 md:p-14 shadow-2xl relative overflow-hidden">
-                {/* MODERN PROGRESS BAR */}
                 {isSyncing && (
                   <div className="absolute inset-x-0 top-0 h-1.5 bg-white/5 overflow-hidden">
                     <div 
-                      className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all duration-300 ease-out flex items-center justify-end pr-2"
+                      className="h-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all duration-300 ease-out"
                       style={{width: `${progress}%`}}
-                    >
-                      <span className="text-[7px] font-black text-white">{progress}%</span>
-                    </div>
+                    />
                   </div>
                 )}
                 
                 {view === "send" ? (
                   <div className="space-y-10 text-center w-full flex flex-col items-center">
                     {!myId ? (
-                      <div className="relative border-2 border-dashed border-white/10 rounded-[48px] py-20 px-10 hover:border-indigo-500/50 transition-all cursor-pointer group bg-black/40 w-full overflow-hidden">
+                      <div className="relative border-2 border-dashed border-white/10 rounded-[48px] py-20 px-10 hover:border-indigo-500/50 transition-all cursor-pointer group bg-black/40 w-full">
                         <input type="file" multiple onChange={(e) => { const sFiles = Array.from(e.target.files || []); setFiles(sFiles); autoUpload(sFiles); }} className="absolute inset-0 opacity-0 cursor-pointer" />
-                        <div className="bg-indigo-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-105 transition-transform shadow-inner"><Upload className="text-indigo-500" size={36} /></div>
-                        <p className="text-[11px] font-black uppercase tracking-[4px] text-gray-400 leading-none">Engage Assets</p>
+                        <div className="bg-indigo-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-8 group-hover:scale-105 transition-transform"><Upload className="text-indigo-500" size={36} /></div>
+                        <p className="text-[11px] font-black uppercase tracking-[4px] text-gray-400 leading-none">Deploy Assets</p>
                       </div>
                     ) : (
                       <div className="animate-in zoom-in-90 duration-500 w-full flex flex-col items-center">
@@ -216,7 +212,7 @@ export default function QShare() {
                           ))}
                         </div>
                         <div className="flex items-center gap-2 text-indigo-400">
-                           <CheckCircle size={14} /> <span className="text-[10px] font-black uppercase tracking-[4px]">Broadcasting Node</span>
+                           <CheckCircle size={14} /> <span className="text-[10px] font-black uppercase tracking-[4px]">Sync Complete</span>
                         </div>
                       </div>
                     )}
@@ -225,10 +221,10 @@ export default function QShare() {
                   <div className="space-y-14 text-center w-full flex flex-col items-center">
                     <div className="flex justify-center gap-2 w-full max-w-md px-2">
                       {targetId.map((data, index) => (
-                        <input key={index} type="text" inputMode="numeric" ref={(el) => { inputRefs.current[index] = el; }} value={data} onChange={(e) => handleOtpChange(e, index)} className="flex-1 aspect-[2/3] max-w-[65px] bg-black border border-white/10 rounded-2xl text-4xl font-black text-center text-indigo-500 outline-none focus:border-indigo-500 focus:shadow-[0_0_20px_rgba(99,102,241,0.1)] transition-all" placeholder="0" />
+                        <input key={index} type="text" inputMode="numeric" ref={(el) => { inputRefs.current[index] = el; }} value={data} onChange={(e) => handleOtpChange(e, index)} className="flex-1 aspect-[2/3] max-w-[65px] bg-black border border-white/10 rounded-2xl text-4xl font-black text-center text-indigo-500 outline-none focus:border-indigo-500 transition-all shadow-inner" placeholder="0" />
                       ))}
                     </div>
-                    <button onClick={handleReceive} className="w-full bg-indigo-600 hover:bg-indigo-500 py-8 rounded-[48px] font-black uppercase text-sm tracking-[4px] text-white shadow-2xl active:scale-95 transition-all shadow-indigo-600/20"> ESTABLISH MESH </button>
+                    <button onClick={handleReceive} className="w-full bg-indigo-600 hover:bg-indigo-500 py-8 rounded-[48px] font-black uppercase text-sm tracking-[4px] text-white shadow-2xl active:scale-95 transition-all"> ESTABLISH MESH </button>
                   </div>
                 )}
               </div>
@@ -241,7 +237,7 @@ export default function QShare() {
                     </h4>
                     {receivedFiles.length > 1 && view === "receive" && (
                       <button onClick={downloadAll} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl text-[10px] font-black uppercase tracking-widest text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all shadow-xl">
-                        <DownloadCloud size={16} /> All
+                        <DownloadCloud size={16} /> Save All
                       </button>
                     )}
                   </div>
@@ -261,10 +257,10 @@ export default function QShare() {
                           </div>
                           <div className="flex gap-2">
                              {view === "send" && (
-                               <button onClick={() => deleteFile(f.name, i)} className="p-3.5 bg-red-500/5 text-red-500/50 rounded-2xl hover:bg-red-500 hover:text-white transition-all shadow-lg"><X size={18}/></button>
+                               <button onClick={() => deleteFile(f.name, i)} className="p-3.5 bg-red-500/5 text-red-500/50 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><X size={18}/></button>
                              )}
                              {view === "receive" && (
-                               <button onClick={() => forceDownload(f.name, targetId.join(""))} className="p-5 bg-white text-black rounded-[24px] hover:scale-110 active:scale-95 transition-all shadow-2xl"><Download size={22} /></button>
+                               <button onClick={() => forceDownload(f.name, targetId.join(""))} className="p-5 bg-white text-black rounded-[24px] hover:scale-110 transition-all active:scale-95 shadow-2xl"><Download size={22} /></button>
                              )}
                           </div>
                         </div>
@@ -276,8 +272,8 @@ export default function QShare() {
                 <div className="bg-[#0a0a0b] border border-white/5 rounded-[40px] p-8 flex items-center gap-6 shadow-xl">
                    <div className="p-4 rounded-2xl bg-indigo-500/10 text-indigo-400 shadow-inner"><Lock size={26} /></div>
                    <div className="text-left leading-tight">
-                      <p className="text-[11px] font-black uppercase tracking-[3px] text-indigo-500 mb-1.5 leading-none">Security Protocol</p>
-                      <p className="text-[10px] text-gray-600 font-bold uppercase italic leading-tight">Assets are purged from the node <br /> upon terminal disconnection.</p>
+                      <p className="text-[11px] font-black uppercase tracking-[3px] text-indigo-500 mb-1.5 leading-none">Security Node</p>
+                      <p className="text-[10px] text-gray-600 font-bold uppercase italic leading-tight">Assets are auto-purged from mesh <br /> upon session termination.</p>
                    </div>
                 </div>
               </div>
@@ -288,7 +284,7 @@ export default function QShare() {
 
       <footer className="py-20 text-center opacity-40 mt-10">
         <p className="text-[11px] font-black uppercase tracking-[15px] italic text-white/60 mb-3 ml-4">Developed by Masrur Siam</p>
-        <p className="text-[9px] font-black uppercase tracking-[10px] italic text-indigo-500/60 leading-none">The Mango Programmer</p>
+        <p className="text-[9px] font-black uppercase tracking-[10px] italic text-indigo-500/60 leading-none underline decoration-1 underline-offset-4">The Mango Programmer</p>
       </footer>
     </div>
   );
