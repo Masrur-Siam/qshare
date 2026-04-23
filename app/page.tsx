@@ -40,43 +40,42 @@ export default function QShare() {
 
   const triggerReceive = async (id: string) => {
     setIsSyncing(true);
-    setStatus("Intercepting...");
-    setProgress(10);
-    const timer = setInterval(() => setProgress(p => p < 90 ? p + 5 : 90), 50);
+    setStatus("Syncing...");
+    setProgress(20);
     try {
       const { data } = await supabase.storage.from("qshare-files").list(id);
       if (data && data.length > 0) {
         setReceivedFiles(data);
-        clearInterval(timer);
         setProgress(100);
         setStatus("Found! ✅");
       } else { setStatus("Node Empty"); setProgress(0); }
-    } catch (err) { setStatus("Error"); }
-    finally { clearInterval(timer); setTimeout(() => setIsSyncing(false), 500); }
+    } catch (err) { setStatus("Fail"); }
+    finally { setTimeout(() => setIsSyncing(false), 500); }
   };
 
   const autoUpload = async (selectedFiles: File[]) => {
     if (selectedFiles.length === 0) return;
+    setFiles(selectedFiles); // Show list immediately
     setIsSyncing(true);
-    setStatus("Syncing...");
-    setProgress(10);
-    const timer = setInterval(() => setProgress(p => p < 95 ? p + 10 : 95), 40);
+    setStatus("Deploying...");
+    setProgress(15);
+    
     const shareId = Math.floor(100000 + Math.random() * 900000).toString();
     try {
       await Promise.all(selectedFiles.map(file => 
         supabase.storage.from("qshare-files").upload(`${shareId}/${file.name}`, file, { upsert: true })
       ));
       setMyId(shareId);
-      clearInterval(timer);
       setProgress(100);
       setStatus("Live ✅");
-    } catch (err) { setStatus("Fail"); setProgress(0); }
-    finally { clearInterval(timer); setTimeout(() => setIsSyncing(false), 400); }
+    } catch (err) { setStatus("Fail"); }
+    finally { setTimeout(() => setIsSyncing(false), 400); }
   };
 
   const deleteFile = async (fileName: string, index: number) => {
     if (myId) await supabase.storage.from("qshare-files").remove([`${myId}/${fileName}`]);
     setFiles(prev => prev.filter((_, i) => i !== index));
+    if (files.length <= 1) setMyId(""); // Reset if no files left
   };
 
   const forceDownload = async (fileName: string, id: string) => {
@@ -113,32 +112,32 @@ export default function QShare() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020203] text-[#f4f4f5] font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-[#020203] text-[#f4f4f5] font-sans selection:bg-indigo-500/30 overflow-x-hidden">
       <nav className="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center relative z-50">
         <div className="flex items-center gap-2 cursor-pointer" onClick={handleReset}>
-          <div className="bg-indigo-600 p-2 rounded-xl"><Zap size={18} fill="white" /></div>
-          <span className="text-xl font-black italic uppercase italic">QShare</span>
+          <div className="bg-indigo-600 p-2 rounded-xl shadow-lg shadow-indigo-600/20"><Zap size={18} fill="white" /></div>
+          <span className="text-xl font-black italic uppercase tracking-tighter">QShare</span>
         </div>
-        <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest flex items-center gap-2">
+        <div className="flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest">
           <div className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`} />
           {status}
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh]">
+      <main className="max-w-6xl mx-auto px-4 py-4 flex flex-col items-center justify-center min-h-[75vh]">
         {view === "home" && (
           <div className="text-center animate-in fade-in duration-700 flex flex-col items-center">
             <h1 className="text-5xl md:text-[100px] font-black italic tracking-tighter uppercase leading-[0.85] mb-8">
               Move Assets. <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-emerald-400 font-black italic">Instantly.</span>
             </h1>
-            <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl px-4 mt-4">
-              <button onClick={() => setView("send")} className="w-full p-8 rounded-[40px] bg-white/[0.02] border border-white/10 hover:border-indigo-500/50 transition-all text-left group">
-                <div className="bg-indigo-500/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-500 transition-all"><Upload size={24} className="text-indigo-400 group-hover:text-white" /></div>
+            <div className="flex flex-col md:flex-row gap-4 w-full max-w-2xl px-4">
+              <button onClick={() => setView("send")} className="w-full p-8 rounded-[40px] bg-white/[0.02] border border-white/10 hover:border-indigo-500/50 transition-all text-left group relative overflow-hidden shadow-2xl">
+                <div className="bg-indigo-500/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-indigo-500 transition-all duration-300"><Upload size={24} className="text-indigo-400 group-hover:text-white" /></div>
                 <h3 className="text-2xl font-black italic uppercase">Transfer</h3>
-                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Deploy to Mesh</p>
+                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Blast to Mesh</p>
               </button>
-              <button onClick={() => setView("receive")} className="w-full p-8 rounded-[40px] bg-white/[0.02] border border-white/10 hover:border-emerald-500/50 transition-all text-left group">
-                <div className="bg-emerald-500/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-500 transition-all"><Download size={24} className="text-emerald-400 group-hover:text-white" /></div>
+              <button onClick={() => setView("receive")} className="w-full p-8 rounded-[40px] bg-white/[0.02] border border-white/10 hover:border-emerald-500/50 transition-all text-left group relative overflow-hidden shadow-2xl">
+                <div className="bg-emerald-500/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-500 transition-all duration-300"><Download size={24} className="text-emerald-400 group-hover:text-white" /></div>
                 <h3 className="text-2xl font-black italic uppercase">Receive</h3>
                 <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Sync from Code</p>
               </button>
@@ -147,61 +146,68 @@ export default function QShare() {
         )}
 
         {(view === "send" || view === "receive") && (
-          <div className="w-full max-w-4xl space-y-6">
-            <button onClick={handleReset} className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest"><ArrowLeft size={14} /> Back</button>
+          <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in zoom-in-95 duration-500">
+            <div className="lg:col-span-12">
+              <button onClick={handleReset} className="flex items-center gap-2 text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 hover:text-white transition-colors"><ArrowLeft size={14} /> Back</button>
+            </div>
             
-            <div className="bg-[#0a0a0b] border border-white/10 rounded-[48px] p-8 md:p-12 relative overflow-hidden text-center">
-              {isSyncing && <div className="absolute top-0 left-0 h-1 bg-indigo-500 transition-all duration-300" style={{width: `${progress}%`}} />}
+            {/* Action Box */}
+            <div className="lg:col-span-6 bg-[#0a0a0b] border border-white/10 rounded-[48px] p-8 md:p-12 relative overflow-hidden flex flex-col items-center justify-center shadow-2xl">
+              {isSyncing && <div className="absolute top-0 left-0 h-1 bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)] transition-all duration-300" style={{width: `${progress}%`}} />}
               
               {view === "send" ? (
-                <div className="flex flex-col items-center gap-8">
+                <div className="w-full flex flex-col items-center gap-6">
                   {!myId ? (
-                    <div className="relative border-2 border-dashed border-white/10 rounded-[32px] py-20 px-10 hover:border-indigo-500/50 transition-all cursor-pointer group bg-black/40 w-full max-w-md">
+                    <div className="relative border-2 border-dashed border-white/10 rounded-[32px] py-16 px-10 hover:border-indigo-500/50 transition-all cursor-pointer group bg-black/40 w-full text-center">
                       <input type="file" multiple onChange={(e) => autoUpload(Array.from(e.target.files || []))} className="absolute inset-0 opacity-0 cursor-pointer z-10" />
                       <Upload className="text-indigo-500 mx-auto mb-4" size={32} />
-                      <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Select Asset</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 leading-none">Deploy Asset</p>
                     </div>
                   ) : (
-                    <div className="space-y-8 animate-in zoom-in duration-300">
+                    <div className="flex flex-col items-center gap-6 w-full">
                       <div className="bg-white p-4 inline-block rounded-[32px] shadow-2xl border-[8px] border-white/5"><QRCodeCanvas value={`${window.location.origin}?id=${myId}`} size={160} level="H" /></div>
-                      <div className="flex justify-center gap-1.5">
+                      <div className="flex justify-center gap-1.5 w-full max-w-xs">
                         {myId.split("").map((digit, i) => (
-                          <div key={i} className="w-10 h-14 md:w-12 md:h-16 flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-xl font-black italic text-white">{digit}</div>
+                          <div key={i} className="flex-1 aspect-[2/3] max-w-[45px] flex items-center justify-center bg-white/5 border border-white/10 rounded-xl text-xl font-black italic text-white shadow-inner">{digit}</div>
                         ))}
                       </div>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-8">
-                  <div className="flex justify-center gap-1 md:gap-2 w-full max-w-xs md:max-w-md">
+                <div className="flex flex-col items-center gap-8 w-full">
+                  <div className="flex justify-center gap-1 md:gap-2 w-full">
                     {targetId.map((data, index) => (
-                      <input key={index} type="text" inputMode="numeric" ref={(el) => { inputRefs.current[index] = el; }} value={data} onChange={(e) => handleOtpChange(e, index)} onKeyDown={(e) => handleKeyDown(e, index)} className="flex-1 aspect-[2/3] bg-black border border-white/10 rounded-xl text-2xl font-black text-center text-indigo-500 outline-none focus:border-indigo-500 transition-all" />
+                      <input key={index} type="text" inputMode="numeric" ref={(el) => { inputRefs.current[index] = el; }} value={data} onChange={(e) => handleOtpChange(e, index)} onKeyDown={(e) => handleKeyDown(e, index)} className="flex-1 aspect-[2/3] max-w-[45px] bg-black border border-white/10 rounded-xl text-2xl font-black text-center text-indigo-500 outline-none focus:border-indigo-500 transition-all" />
                     ))}
                   </div>
                   {receivedFiles.length > 1 && (
-                    <button onClick={() => receivedFiles.forEach(f => forceDownload(f.name, targetId.join("")))} className="flex items-center gap-2 px-6 py-3 bg-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-indigo-600/20"><DownloadCloud size={16} /> Save All Assets</button>
+                    <button onClick={() => receivedFiles.forEach(f => forceDownload(f.name, targetId.join("")))} className="flex items-center gap-2 px-6 py-3 bg-indigo-600 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"><DownloadCloud size={16} /> Save All</button>
                   )}
                 </div>
               )}
             </div>
 
-            <div className="bg-white/[0.01] border border-white/5 rounded-[40px] p-6 min-h-[250px]">
-              <h4 className="text-[9px] font-black uppercase tracking-[4px] text-gray-600 italic mb-6">Asset Queue</h4>
-              <div className="space-y-3">
+            {/* List Box */}
+            <div className="lg:col-span-6 bg-white/[0.01] border border-white/5 rounded-[48px] p-6 md:p-8 flex flex-col min-h-[350px] shadow-2xl overflow-hidden">
+              <h4 className="text-[9px] font-black uppercase tracking-[4px] text-gray-600 italic mb-6">Asset Stream</h4>
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                 {(view === "send" ? files : receivedFiles).length === 0 ? (
-                  <div className="h-40 flex items-center justify-center opacity-5"><Activity size={40} /></div>
+                  <div className="h-full flex items-center justify-center opacity-5"><Activity size={60} /></div>
                 ) : (
                   (view === "send" ? files : receivedFiles).map((f: any, i: number) => (
-                    <div key={i} className="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-2xl">
+                    <div key={i} className="flex justify-between items-center p-4 bg-white/5 border border-white/5 rounded-3xl group hover:bg-white/[0.08] transition-all">
                       <div className="flex items-center gap-3 overflow-hidden text-left">
-                        <FileText size={18} className="text-indigo-400 flex-shrink-0" />
-                        <p className="text-xs font-black text-gray-200 truncate italic">{f.name}</p>
+                        <div className="p-2.5 bg-indigo-500/10 rounded-xl"><FileText size={18} className="text-indigo-400" /></div>
+                        <div className="overflow-hidden">
+                           <p className="text-xs font-black text-gray-200 truncate italic leading-none mb-1">{f.name}</p>
+                           <p className="text-[8px] font-bold text-gray-600 uppercase tracking-widest leading-none italic">Asset Ready</p>
+                        </div>
                       </div>
                       {view === "send" ? (
                         <button onClick={() => deleteFile(f.name, i)} className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><X size={16}/></button>
                       ) : (
-                        <button onClick={() => forceDownload(f.name, targetId.join(""))} className="p-3 bg-white text-black rounded-xl hover:scale-105 transition-all"><Download size={16}/></button>
+                        <button onClick={() => forceDownload(f.name, targetId.join(""))} className="p-3.5 bg-white text-black rounded-xl hover:scale-105 transition-all active:scale-90 shadow-xl"><Download size={18}/></button>
                       )}
                     </div>
                   ))
