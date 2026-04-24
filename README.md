@@ -1,52 +1,27 @@
-# ⚡ QShare Pro - Lightning Fast P2P File Sharing
+# 🥭 QShare - Privacy-First Self-Destructing File Sharing SaaS
 
-**QShare Pro** holo ekti ultra-modern, secure, ebong lightning-fast peer-to-peer (P2P) file sharing application. Konorakom intermediate server charai sora-sori browser-to-browser file, text, ebong link share korar jonno eta banano hoyeche.
+QShare is an ultra-fast, secure file-sharing platform designed for privacy. Files uploaded to the platform are automatically destroyed after **5 minutes**, ensuring no data remains on the server permanently.
 
-![QShare Banner](https://img.shields.io/badge/Speed-Lightning-yellow?style=for-the-badge&logo=zap)
-![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
-![TailwindCSS](https://img.shields.io/badge/Tailwind-CSS-blue?style=for-the-badge&logo=tailwind-css)
-![PeerJS](https://img.shields.io/badge/P2P-PeerJS-red?style=for-the-badge&logo=peerjs)
-
----
-
-## ✨ Features
-
-- 🚀 **Zero Server Storage:** Apnar file kkhonoi server-e save hoy na, sora-sori device-to-device transfer hoy.
-- 📱 **Mobile Optimized:** Full responsive design, mobile-e smoothly scroll ar tap-e kaj kore.
-- 🔐 **Secure Handshake:** 6-digit unique code ba QR code-er maddhome secure connection.
-- 📁 **Multi-File Support:** Ekshathe onek gulo file share ebong "Download All" option.
-- 💬 **Direct Text/Link Share:** Text ba link copy-paste koreo share kora jay.
-- ⚡ **STUN Optimized:** Google-er STUN server use kora hoyeche fast connection establishment-er jonno.
+## 🚀 Key Features
+- **Auto-Purge Engine:** Powered by Supabase Edge Functions to clean storage automatically every 5 minutes.
+- **QR Code Integration:** Instantly generate QR codes for seamless mobile-to-desktop sharing.
+- **Zero-Storage Footprint:** Maintains a clean server environment by deleting expired assets.
+- **Lightweight & Fast:** Minimalist UI built for speed and efficiency.
 
 ## 🛠️ Tech Stack
+- **Frontend:** Next.js / React (Tailwind CSS)
+- **Backend:** Supabase (PostgreSQL & Storage)
+- **Automation:** Supabase Edge Functions (Deno)
+- **Scheduling:** pg_cron & pg_net extensions
 
-- **Framework:** Next.js 15 (App Router)
-- **Styling:** Tailwind CSS (Glassmorphism UI)
-- **Icons:** Lucide React
-- **P2P Engine:** PeerJS
-- **QR Code:** QRCode Canvas
+## ⚙️ How it Works
+1. **Upload:** User uploads a file through the QShare interface.
+2. **Storage:** The file is stored in a private Supabase bucket with a unique folder ID.
+3. **Timer:** A database-level Cron Job triggers an Edge Function every minute.
+4. **Purge:** The function checks the `created_at` timestamp. If the file is older than 5 minutes, it is permanently deleted from the storage bucket.
 
-## 🚀 How to Use
-
-1. **Send:**
-   - App-e dhuke "Send" button-e click korun.
-   - File select korun ba text paste korun.
-   - 6-digit code-ti apnar friend-ke din ba QR code share korun.
-
-2. **Receive:**
-   - "Receive" button-e click korun.
-   - Friend-er deya 6-digit code-ti likhun.
-   - "Get Assets" click korlei connection established hobe ebong file download shuru hobe.
-
-## 👨‍💻 Developer
-
-**Masrur Hossain Siam** *The Mango Programmer* Specialist in Full-Stack Web Development & Modern UI/UX.
+## 🛡️ Security & Privacy
+QShare is built with a "Privacy-First" approach. We do not keep logs of your files, and once the 5-minute window expires, the data is wiped both logically from the database and physically from the storage disk.
 
 ---
-
-## 📝 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-Built with ❤️ by **The Mango Programmer** 🥭
+Developed by **Masrur Siam - The Mango Programmer**
